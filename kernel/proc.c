@@ -44,6 +44,18 @@ procinit(void)
   kvminithart();
 }
 
+//collect the number of processes
+uint64 free_proc(void){
+  uint64 n = 0;
+  struct proc *p;
+  for (p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if (p->state != UNUSED) n++;
+    release(&p->lock);
+  }
+  return n;
+}
+
 // Must be called with interrupts disabled,
 // to prevent race with process being moved
 // to a different CPU.
@@ -261,7 +273,8 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
-
+  //trace 2 usertests forkforkfork
+  
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
@@ -276,7 +289,7 @@ fork(void)
   np->sz = p->sz;
 
   np->parent = p;
-
+  np->mask = p->mask;//I'm a genius!
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
